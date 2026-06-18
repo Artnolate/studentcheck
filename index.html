@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARTNOLATE — ตรวจสอบสถานะคอร์สเรียน</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #111111;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --text-muted: #666666;
+            --border-color: #e5e5e5;
+            --accent-color: #e65100; /* สีส้มอมแดง ให้ความรู้สึกสร้างสรรค์/ศิลปะ */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Anuphan', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--primary-color);
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        /* กล่องค้นหา */
+        .search-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--primary-color);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .btn-search {
+            width: 100%;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-search:hover {
+            opacity: 0.9;
+        }
+
+        /* พื้นที่แสดงผลลัพธ์ */
+        .result-container {
+            display: none; /* ซ่อนไว้ก่อนค้นหา */
+        }
+
+        /* ข้อมูลโปรไฟล์นักเรียน */
+        .profile-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .profile-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 16px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .info-item span {
+            display: block;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .info-value {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        .highlight-box {
+            grid-column: span 2;
+            background: #fff8f5;
+            border: 1px dashed var(--accent-color);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* ประวัติการเข้าเรียน */
+        .history-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .history-list {
+            margin-top: 12px;
+            list-style: none;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95rem;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-date {
+            font-weight: 500;
+        }
+
+        .history-tag {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: #eee;
+            font-weight: 500;
+        }
+
+        .tag-onsite { background: #e3f2fd; color: #0d47a1; }
+        .tag-online { background: #f3e5f5; color: #4a148c; }
+
+        /* Loading & Error */
+        .loader {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .error-msg {
+            display: none;
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>ARTNOLATE</h1>
+            <p>ระบบตรวจสอบสถานะคอร์สเรียนและประวัติเข้าเรียน</p>
+        </div>
+
+        <div class="search-card">
+            <div class="form-group">
+                <label for="phoneInput">เบอร์โทรศัพท์ที่ลงทะเบียน</label>
+                <input type="tel" id="phoneInput" placeholder="ตัวอย่าง: 0812345678" autocomplete="off">
+            </div>
+            <button class="btn-search" id="searchBtn">ตรวจสอบข้อมูล</button>
+        </div>
+
+        <div class="loader" id="loader">กำลังค้นหาข้อมูลในระบบ...</div>
+        <div class="error-msg" id="errorMsg"></div>
+
+        <div class="result-container" id="resultContainer">
+            
+            <div class="profile-card">
+                <div class="profile-title">ข้อมูลผู้เรียน</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">ชื่อเล่น</span>
+                        <span class="info-value" id="lblNickname">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">ชื่อ-นามสกุล</span>
+                        <span class="info-value" id="lblFullname">-</span>
+                    </div>
+                    <div class="info-item" style="grid-column: span 2;">
+                        <span class="info-label">คอร์สที่เรียน</span>
+                        <span class="info-value" id="lblCourse">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">รอบคอร์ส</span>
+                        <span class="info-value" id="lblRound">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">วันหมดอายุคอร์ส</span>
+                        <span class="info-value" id="lblExpiry">-</span>
+                    </div>
+                    <div class="highlight-box">
+                        <span class="info-label" style="color: var(--accent-color);">จำนวนคงเหลือปัจจุบัน</span>
+                        <span class="info-value" id="lblRemaining" style="font-size: 1.4rem; color: var(--accent-color); font-weight: 600;">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="history-card">
+                <div class="profile-title">ประวัติการเช็คชื่อเข้าเรียน</div>
+                <ul class="history-list" id="historyList">
+                    </ul>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // เปลี่ยน URL_WEB_APP_ตรงนี้ ให้เป็น URL ของ Google Apps Script ที่คุณ Deploy ล่าสุด
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw6_JEBX8IJ9YU-EGXjARP6KZkCdjKa9Kfkw_O1yj_T8Su9xpVaUZrUL3wsj2HlUWK9/exec'; 
+
+        const searchBtn = document.getElementById('searchBtn');
+        const phoneInput = document.getElementById('phoneInput');
+        const loader = document.getElementById('loader');
+        const errorMsg = document.getElementById('errorMsg');
+        const resultContainer = document.getElementById('resultContainer');
+
+        searchBtn.addEventListener('click', performSearch);
+        phoneInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') performSearch();
+        });
+
+        function performSearch() {
+            const phone = phoneInput.value.trim();
+            if (!phone) {
+                showError('กรุณากรอกเบอร์โทรศัพท์');
+                return;
+            }
+
+            // รีเซ็ตการแสดงผล
+            errorMsg.style.display = 'none';
+            resultContainer.style.display = 'none';
+            loader.style.display = 'block';
+
+            // ยิง API ไปที่ App Script ฝั่ง Backend
+            fetch(`${WEB_APP_URL}?action=studentCheck&phone=${encodeURIComponent(phone)}`)
+                .then(res => res.json())
+                .then(res => {
+                    loader.style.display = 'none';
+                    
+                    if (res.error) {
+                        showError(res.error);
+                    } else if (res.success === false) {
+                        showError(res.message);
+                    } else if (res.success === true) {
+                        displayData(res.profile, res.history);
+                    }
+                })
+                .catch(err => {
+                    loader.style.display = 'none';
+                    showError('เกิดข้อผิดพลาดในการเชื่อมต่อระบบ กรุณาลองใหม่อีกครั้ง');
+                    console.error(err);
+                });
+        }
+
+        function showError(msg) {
+            errorMsg.innerText = msg;
+            errorMsg.style.display = 'block';
+        }
+
+        function displayData(profile, history) {
+            // ใส่ข้อมูลโปรไฟล์
+            document.getElementById('lblNickname').innerText = profile.nickname || '-';
+            document.getElementById('lblFullname').innerText = profile.fullname || '-';
+            document.getElementById('lblCourse').innerText = profile.courseRaw || '-';
+            document.getElementById('lblRound').innerText = profile.round || '-';
+            document.getElementById('lblExpiry').innerText = profile.expiry || 'ไม่ระบุ';
+            document.getElementById('lblRemaining').innerText = profile.remaining || '0';
+
+            // ใส่ข้อมูลประวัติเข้าเรียน
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = ''; // เคลียร์ของเก่า
+
+            if (history.length === 0) {
+                historyList.innerHTML = '<li class="history-item" style="color: #999; justify-content: center;">ยังไม่มีประวัติการเช็คชื่อในระบบ</li>';
+            } else {
+                history.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'history-item';
+                    
+                    // แยกสี Tag ตามประเภท (Onsite / Online)
+                    let tagClass = 'history-tag';
+                    if(item.type.toLowerCase().includes('onsite')) tagClass += ' tag-onsite';
+                    if(item.type.toLowerCase().includes('online')) tagClass += ' tag-online';
+
+                    li.innerHTML = `
+                        <span class="history-date">${formatThaiDate(item.date)}</span>
+                        <span class="${tagClass}">${item.type} (รอบ ${item.round})</span>
+                    `;
+                    historyList.appendChild(li);
+                });
+            }
+
+            // แสดงตารางผลลัพธ์
+            resultContainer.style.display = 'block';
+        }
+
+        // ฟังก์ชันช่วยจัดรูปแบบวันที่จาก YYYY-MM-DD ให้เป็นวันที่ไทยแบบสั้นอ่านง่าย
+        function formatThaiDate(dateStr) {
+            if(!dateStr) return '-';
+            const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+            const parts = dateStr.split('-');
+            if(parts.length !== 3) return dateStr;
+            
+            const day = parseInt(parts[2], 10);
+            const month = months[parseInt(parts[1], 10) - 1];
+            const year = parseInt(parts[0], 10) + 543; // แปลงเป็น พ.ศ.
+            
+            return `${day} ${month} ${year}`;
+        }
+    </script>
+</body>
+</html>
