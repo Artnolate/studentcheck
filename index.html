@@ -1,397 +1,626 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARTNOLATE — ตรวจสอบสถานะคอร์สเรียน</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --primary-color: #111111;
-            --bg-color: #f8f9fa;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-            --text-muted: #666666;
-            --border-color: #e5e5e5;
-            --accent-color: #e65100; /* สีส้มอมแดง ให้ความรู้สึกสร้างสรรค์/ศิลปะ */
-        }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ตรวจสอบข้อมูลคอร์ส — ARTNOLATE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --primary:#1C2951;
+  --accent:#FF8C00;
+  --accent-light:#FFE5CC;
+  --bg:#F5F7FA;
+  --surface:#fff;
+  --border:#DDE4ED;
+  --border-light:#EEF1F6;
+  --txt:#1A1D23;
+  --txt2:#6B7280;
+  --txt3:#9CA3AF;
+  --green:#10B981;
+  --green-l:#D1FAE5;
+  --orange:#F59E0B;
+  --orange-l:#FEF3C7;
+  --red:#EF4444;
+  --red-l:#FEE2E2;
+  --grey:#9CA3AF;
+  --grey-l:#F3F4F6;
+  --r:10px;
+  --rs:6px;
+  --sh:0 1px 3px rgba(0,0,0,.07);
+  --shm:0 4px 12px rgba(0,0,0,.09);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--txt);font-size:15px;line-height:1.6;min-height:100vh}
+button{cursor:pointer;font-family:inherit}
+input{font-family:inherit}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Anuphan', sans-serif;
-        }
+/* ── Header ─────────────────────────────── */
+.hdr{
+  background:var(--primary);border-bottom:3px solid var(--accent);
+  padding:0 20px;display:flex;align-items:center;justify-content:space-between;
+  height:60px;position:sticky;top:0;z-index:100;box-shadow:var(--shm);
+}
+.brand{display:flex;flex-direction:column;line-height:1.15}
+.brand-title{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.3px}
+.brand-sub{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.1em;text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.btn-logout{
+  padding:6px 16px;border:1.5px solid rgba(255,255,255,.35);border-radius:var(--rs);
+  background:transparent;color:#fff;font-size:13px;font-weight:600;
+  transition:all .15s;display:none;
+}
+.btn-logout:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.6)}
+.btn-logout.show{display:block}
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
+/* ── Login Screen ───────────────────────── */
+#screen-login{
+  display:flex;align-items:center;justify-content:center;
+  min-height:calc(100vh - 63px);padding:20px;
+}
+.login-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:40px 36px;width:100%;max-width:400px;box-shadow:var(--shm);text-align:center;
+}
+.login-icon{font-size:52px;margin-bottom:14px;display:block}
+.login-title{font-size:22px;font-weight:700;color:var(--primary);margin-bottom:6px}
+.login-sub{font-size:14px;color:var(--txt2);margin-bottom:28px;line-height:1.7}
+.input-wrap{position:relative;margin-bottom:14px}
+.input-wrap input{
+  width:100%;padding:13px 16px 13px 48px;
+  border:1.5px solid var(--border);border-radius:var(--rs);
+  font-size:16px;color:var(--txt);background:var(--bg);
+  outline:none;transition:border-color .15s,box-shadow .15s;
+  letter-spacing:.04em;
+}
+.input-wrap input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(28,41,81,.08)}
+.input-wrap input::placeholder{color:var(--txt3);letter-spacing:0}
+.input-icon{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  font-size:20px;color:var(--txt3);pointer-events:none;
+}
+.btn-login{
+  width:100%;padding:13px;border:none;border-radius:var(--rs);
+  background:var(--primary);color:#fff;font-size:16px;font-weight:700;
+  transition:background .15s,transform .1s;margin-top:4px;
+}
+.btn-login:hover:not(:disabled){background:#253468}
+.btn-login:active:not(:disabled){transform:scale(.98)}
+.btn-login:disabled{opacity:.55;cursor:not-allowed}
+.err-msg{
+  background:var(--red-l);color:#991B1B;border:1px solid #FECACA;
+  border-radius:var(--rs);padding:10px 14px;font-size:13px;font-weight:500;
+  margin-bottom:14px;display:none;text-align:left;
+}
+.err-msg.show{display:block}
+.login-note{font-size:12px;color:var(--txt3);margin-top:18px;line-height:1.8}
 
-        .container {
-            width: 100%;
-            max-width: 500px;
-            margin-top: 40px;
-            margin-bottom: 40px;
-        }
+/* ── Main Screen ────────────────────────── */
+#screen-main{display:none;max-width:820px;margin:0 auto;padding:20px}
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+/* ── Profile Card ───────────────────────── */
+.profile-card{
+  background:var(--primary);border-radius:var(--r);
+  padding:22px 24px;margin-bottom:20px;box-shadow:var(--shm);
+  position:relative;overflow:hidden;
+}
+.profile-card::after{
+  content:'';position:absolute;right:-20px;top:-20px;
+  width:140px;height:140px;border-radius:50%;
+  background:rgba(255,140,0,.10);pointer-events:none;
+}
+.profile-top{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.profile-avatar{
+  width:50px;height:50px;border-radius:50%;flex-shrink:0;
+  background:rgba(255,140,0,.22);border:2px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:700;color:var(--accent);
+}
+.profile-names{}
+.p-nickname{font-size:20px;font-weight:700;color:#fff;line-height:1.2}
+.p-fullname{font-size:13px;color:rgba(255,255,255,.65);margin-top:2px}
+.profile-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:12px 20px;
+}
+.pitem{display:flex;flex-direction:column;gap:2px}
+.pitem-label{
+  font-size:10px;font-weight:700;color:var(--accent);
+  text-transform:uppercase;letter-spacing:.08em;
+}
+.pitem-value{font-size:14px;color:#fff;font-weight:500;word-break:break-all}
 
-        .header h1 {
-            font-size: 1.8rem;
-            font-weight: 600;
-            letter-spacing: 1px;
-            color: var(--primary-color);
-        }
+/* ── Course Status ──────────────────────── */
+.course-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:18px 20px;margin-bottom:20px;box-shadow:var(--sh);
+}
+.course-box-title{
+  font-size:13px;font-weight:700;color:var(--txt2);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;
+}
+.course-name{
+  font-size:15px;font-weight:700;color:var(--primary);
+  background:#E8EFFF;border:1px solid #C7D0FF;
+  display:inline-flex;align-items:center;padding:5px 14px;
+  border-radius:20px;margin-bottom:14px;
+}
+.progress-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.progress-label{font-size:13px;color:var(--txt2);min-width:80px}
+.progress-bar-bg{
+  flex:1;height:9px;border-radius:5px;background:var(--grey-l);overflow:hidden;
+}
+.progress-bar-fill{
+  height:100%;border-radius:5px;background:var(--primary);
+  transition:width .6s ease;
+}
+.progress-bar-fill.warn{background:var(--orange)}
+.progress-bar-fill.danger{background:var(--red)}
+.progress-stat{font-size:13px;font-weight:700;min-width:56px;text-align:right}
+.course-meta-row{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13px;color:var(--txt2);margin-top:6px}
+.course-meta-row span{display:flex;align-items:center;gap:4px}
+.alert-inline{
+  display:flex;align-items:center;gap:7px;padding:8px 12px;
+  border-radius:var(--rs);font-size:13px;font-weight:500;margin-top:12px;
+}
+.ai-w{background:var(--orange-l);color:#92400E;border:1px solid #FDE68A}
+.ai-d{background:var(--red-l);color:#991B1B;border:1px solid #FECACA}
 
-        .header p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-top: 5px;
-        }
+/* ── History Section ────────────────────── */
+.sec-title{
+  font-size:15px;font-weight:700;color:var(--primary);
+  margin-bottom:14px;padding-bottom:10px;
+  border-bottom:2px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.sec-count{
+  background:var(--primary);color:#fff;font-size:11px;font-weight:700;
+  padding:2px 10px;border-radius:20px;
+}
+.round-block{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;margin-bottom:14px;box-shadow:var(--sh);
+}
+.round-head{
+  background:#F0F4FF;padding:10px 16px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  border-bottom:1px solid var(--border);
+}
+.round-name{font-size:14px;font-weight:700;color:var(--primary)}
+.round-badge{
+  font-size:12px;font-weight:600;color:var(--txt2);
+  background:var(--surface);padding:2px 12px;border-radius:20px;
+  border:1px solid var(--border);
+}
+.rtable{width:100%;border-collapse:collapse;font-size:14px}
+.rtable thead{background:var(--bg)}
+.rtable th{
+  padding:9px 14px;text-align:left;font-size:11px;font-weight:700;
+  color:var(--primary);text-transform:uppercase;letter-spacing:.05em;
+  border-bottom:1px solid var(--border);
+}
+.rtable td{padding:11px 14px;border-bottom:1px solid var(--border-light);vertical-align:middle}
+.rtable tr:last-child td{border-bottom:none}
+.rtable tr:hover td{background:#FAFBFC}
+.num-cell{
+  display:inline-block;font-size:12px;font-weight:700;color:var(--primary);
+  background:#E8EFFF;border-radius:20px;padding:3px 11px;min-width:55px;text-align:center;
+}
+.pill{display:inline-block;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600}
+.pill-live{background:#E8EFFF;color:var(--primary)}
+.pill-online{background:#FFE5CC;color:#B8740F}
 
-        /* กล่องค้นหา */
-        .search-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-            margin-bottom: 20px;
-        }
+/* ── States ─────────────────────────────── */
+.state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:56px 20px;color:var(--txt3);text-align:center;gap:10px;
+}
+.state-ico{font-size:38px}
+.state p{font-size:14px}
+.spinner{
+  width:30px;height:30px;border:3px solid var(--border);
+  border-top-color:var(--primary);border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-        .form-group {
-            margin-bottom: 16px;
-        }
+/* ── Toast ───────────────────────────────── */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);
+  background:var(--primary);color:#fff;padding:10px 22px;border-radius:8px;
+  font-size:14px;font-weight:500;opacity:0;transition:opacity .25s,transform .25s;
+  pointer-events:none;z-index:999;white-space:nowrap;max-width:90vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{background:var(--green)}
+#toast.err{background:var(--red)}
 
-        .form-group label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-bottom: 6px;
-            color: var(--primary-color);
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.2s;
-        }
-
-        .form-group input:focus {
-            border-color: var(--primary-color);
-        }
-
-        .btn-search {
-            width: 100%;
-            background: var(--primary-color);
-            color: #fff;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .btn-search:hover {
-            opacity: 0.9;
-        }
-
-        /* พื้นที่แสดงผลลัพธ์ */
-        .result-container {
-            display: none; /* ซ่อนไว้ก่อนค้นหา */
-        }
-
-        /* ข้อมูลโปรไฟล์นักเรียน */
-        .profile-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-        }
-
-        .profile-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-            margin-bottom: 16px;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .info-item span {
-            display: block;
-        }
-
-        .info-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .info-value {
-            font-size: 1rem;
-            font-weight: 500;
-            color: var(--primary-color);
-        }
-
-        .highlight-box {
-            grid-column: span 2;
-            background: #fff8f5;
-            border: 1px dashed var(--accent-color);
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        /* ประวัติการเข้าเรียน */
-        .history-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 24px;
-        }
-
-        .history-list {
-            margin-top: 12px;
-            list-style: none;
-        }
-
-        .history-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.95rem;
-        }
-
-        .history-item:last-child {
-            border-bottom: none;
-        }
-
-        .history-date {
-            font-weight: 500;
-        }
-
-        .history-tag {
-            font-size: 0.8rem;
-            padding: 4px 8px;
-            border-radius: 4px;
-            background: #eee;
-            font-weight: 500;
-        }
-
-        .tag-onsite { background: #e3f2fd; color: #0d47a1; }
-        .tag-online { background: #f3e5f5; color: #4a148c; }
-
-        /* Loading & Error */
-        .loader {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
-        .error-msg {
-            display: none;
-            background: #ffebee;
-            color: #c62828;
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 0.9rem;
-            margin-bottom: 20px;
-        }
-    </style>
+/* ── Responsive ─────────────────────────── */
+@media(max-width:600px){
+  #screen-main{padding:14px}
+  .login-card{padding:30px 20px}
+  .profile-card{padding:16px 16px}
+  .profile-grid{grid-template-columns:1fr 1fr}
+  .rtable th:first-child,.rtable td:first-child{padding-left:10px}
+  .rtable th,.rtable td{padding:9px 10px}
+}
+</style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="header">
-            <h1>ARTNOLATE</h1>
-            <p>ระบบตรวจสอบสถานะคอร์สเรียนและประวัติเข้าเรียน</p>
-        </div>
+<header class="hdr">
+  <div class="brand">
+    <span class="brand-title">📖 ตรวจสอบคอร์สเรียน</span>
+    <span class="brand-sub">ARTNOLATE</span>
+  </div>
+  <div class="hdr-right">
+    <button class="btn-logout" id="btn-logout" onclick="doLogout()">ออกจากระบบ</button>
+  </div>
+</header>
 
-        <div class="search-card">
-            <div class="form-group">
-                <label for="phoneInput">เบอร์โทรศัพท์ที่ลงทะเบียน</label>
-                <input type="tel" id="phoneInput" placeholder="ตัวอย่าง: 0812345678" autocomplete="off">
-            </div>
-            <button class="btn-search" id="searchBtn">ตรวจสอบข้อมูล</button>
-        </div>
+<!-- ── SCREEN : LOGIN ── -->
+<div id="screen-login">
+  <div class="login-card">
+    <span class="login-icon">🎨</span>
+    <div class="login-title">ยินดีต้อนรับ</div>
+    <div class="login-sub">กรอกเบอร์โทรศัพท์ที่ลงทะเบียนไว้<br>เพื่อตรวจสอบข้อมูลคอร์สและประวัติเรียน</div>
 
-        <div class="loader" id="loader">กำลังค้นหาข้อมูลในระบบ...</div>
-        <div class="error-msg" id="errorMsg"></div>
+    <div class="err-msg" id="login-err">ไม่พบข้อมูลนักเรียนที่ตรงกับเบอร์นี้</div>
 
-        <div class="result-container" id="resultContainer">
-            
-            <div class="profile-card">
-                <div class="profile-title">ข้อมูลผู้เรียน</div>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">ชื่อเล่น</span>
-                        <span class="info-value" id="lblNickname">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">ชื่อ-นามสกุล</span>
-                        <span class="info-value" id="lblFullname">-</span>
-                    </div>
-                    <div class="info-item" style="grid-column: span 2;">
-                        <span class="info-label">คอร์สที่เรียน</span>
-                        <span class="info-value" id="lblCourse">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">รอบคอร์ส</span>
-                        <span class="info-value" id="lblRound">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">วันหมดอายุคอร์ส</span>
-                        <span class="info-value" id="lblExpiry">-</span>
-                    </div>
-                    <div class="highlight-box">
-                        <span class="info-label" style="color: var(--accent-color);">จำนวนคงเหลือปัจจุบัน</span>
-                        <span class="info-value" id="lblRemaining" style="font-size: 1.4rem; color: var(--accent-color); font-weight: 600;">-</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="history-card">
-                <div class="profile-title">ประวัติการเช็คชื่อเข้าเรียน</div>
-                <ul class="history-list" id="historyList">
-                    </ul>
-            </div>
-
-        </div>
+    <div class="input-wrap">
+      <span class="input-icon">📱</span>
+      <input type="tel" id="login-phone" placeholder="0812345678"
+        maxlength="10" inputmode="numeric"
+        onkeydown="if(event.key==='Enter')doLogin()"/>
     </div>
 
-    <script>
-        // เปลี่ยน URL_WEB_APP_ตรงนี้ ให้เป็น URL ของ Google Apps Script ที่คุณ Deploy ล่าสุด
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw6_JEBX8IJ9YU-EGXjARP6KZkCdjKa9Kfkw_O1yj_T8Su9xpVaUZrUL3wsj2HlUWK9/exec'; 
+    <button class="btn-login" id="btn-login" onclick="doLogin()">ตรวจสอบข้อมูล</button>
 
-        const searchBtn = document.getElementById('searchBtn');
-        const phoneInput = document.getElementById('phoneInput');
-        const loader = document.getElementById('loader');
-        const errorMsg = document.getElementById('errorMsg');
-        const resultContainer = document.getElementById('resultContainer');
+    <div class="login-note">
+      ระบบนี้ใช้สำหรับนักเรียน ARTNOLATE เท่านั้น<br>
+      หากไม่พบข้อมูล กรุณาติดต่อแอดมิน
+    </div>
+  </div>
+</div>
 
-        searchBtn.addEventListener('click', performSearch);
-        phoneInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') performSearch();
-        });
+<!-- ── SCREEN : MAIN ── -->
+<div id="screen-main">
 
-        function performSearch() {
-            const phone = phoneInput.value.trim();
-            if (!phone) {
-                showError('กรุณากรอกเบอร์โทรศัพท์');
-                return;
-            }
+  <!-- Profile Card -->
+  <div class="profile-card" id="profile-card">
+    <div class="profile-top">
+      <div class="profile-avatar" id="p-avatar">?</div>
+      <div class="profile-names">
+        <div class="p-nickname" id="p-nickname">—</div>
+        <div class="p-fullname" id="p-fullname">—</div>
+      </div>
+    </div>
+    <div class="profile-grid">
+      <div class="pitem">
+        <span class="pitem-label">🏫 โรงเรียน</span>
+        <span class="pitem-value" id="p-school">—</span>
+      </div>
+      <div class="pitem">
+        <span class="pitem-label">📱 เบอร์โทรศัพท์</span>
+        <span class="pitem-value" id="p-phone">—</span>
+      </div>
+      <div class="pitem">
+        <span class="pitem-label">🎓 ภาควิชา</span>
+        <span class="pitem-value" id="p-dept">—</span>
+      </div>
+      <div class="pitem">
+        <span class="pitem-label">🔄 รอบที่เรียน</span>
+        <span class="pitem-value" id="p-round">—</span>
+      </div>
+    </div>
+  </div>
 
-            // รีเซ็ตการแสดงผล
-            errorMsg.style.display = 'none';
-            resultContainer.style.display = 'none';
-            loader.style.display = 'block';
+  <!-- Course Status Box -->
+  <div class="course-box">
+    <div class="course-box-title">📚 ข้อมูลคอร์สที่ลงทะเบียน</div>
+    <div class="course-name" id="p-course">—</div>
+    <div class="progress-row">
+      <span class="progress-label">ครั้งที่เหลือ</span>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <span class="progress-stat" id="p-remaining">—</span>
+    </div>
+    <div class="course-meta-row">
+      <span>📆 อายุคอร์ส: <strong id="p-expiry">—</strong></span>
+    </div>
+    <div id="course-alerts"></div>
+  </div>
 
-            // ยิง API ไปที่ App Script ฝั่ง Backend
-            fetch(`${WEB_APP_URL}?action=studentCheck&phone=${encodeURIComponent(phone)}`)
-                .then(res => res.json())
-                .then(res => {
-                    loader.style.display = 'none';
-                    
-                    if (res.error) {
-                        showError(res.error);
-                    } else if (res.success === false) {
-                        showError(res.message);
-                    } else if (res.success === true) {
-                        displayData(res.profile, res.history);
-                    }
-                })
-                .catch(err => {
-                    loader.style.display = 'none';
-                    showError('เกิดข้อผิดพลาดในการเชื่อมต่อระบบ กรุณาลองใหม่อีกครั้ง');
-                    console.error(err);
-                });
-        }
+  <!-- Attendance History -->
+  <div class="sec-title">
+    📜 ประวัติการเข้าเรียน
+    <span class="sec-count" id="history-count">0 ครั้ง</span>
+  </div>
+  <div id="history-content">
+    <div class="state"><div class="spinner"></div><p>กำลังโหลดประวัติ…</p></div>
+  </div>
 
-        function showError(msg) {
-            errorMsg.innerText = msg;
-            errorMsg.style.display = 'block';
-        }
+</div>
 
-        function displayData(profile, history) {
-            // ใส่ข้อมูลโปรไฟล์
-            document.getElementById('lblNickname').innerText = profile.nickname || '-';
-            document.getElementById('lblFullname').innerText = profile.fullname || '-';
-            document.getElementById('lblCourse').innerText = profile.courseRaw || '-';
-            document.getElementById('lblRound').innerText = profile.round || '-';
-            document.getElementById('lblExpiry').innerText = profile.expiry || 'ไม่ระบุ';
-            document.getElementById('lblRemaining').innerText = profile.remaining || '0';
+<div id="toast"></div>
 
-            // ใส่ข้อมูลประวัติเข้าเรียน
-            const historyList = document.getElementById('historyList');
-            historyList.innerHTML = ''; // เคลียร์ของเก่า
+<script>
+/* ── CONFIG ──────────────────────────────────────── */
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw6_JEBX8IJ9YU-EGXjARP6KZkCdjKa9Kfkw_O1yj_T8Su9xpVaUZrUL3wsj2HlUWK9/exec';
 
-            if (history.length === 0) {
-                historyList.innerHTML = '<li class="history-item" style="color: #999; justify-content: center;">ยังไม่มีประวัติการเช็คชื่อในระบบ</li>';
-            } else {
-                history.forEach(item => {
-                    const li = document.createElement('li');
-                    li.className = 'history-item';
-                    
-                    // แยกสี Tag ตามประเภท (Onsite / Online)
-                    let tagClass = 'history-tag';
-                    if(item.type.toLowerCase().includes('onsite')) tagClass += ' tag-onsite';
-                    if(item.type.toLowerCase().includes('online')) tagClass += ' tag-online';
+/* ── STATE ───────────────────────────────────────── */
+let currentPhone = '';
 
-                    li.innerHTML = `
-                        <span class="history-date">${formatThaiDate(item.date)}</span>
-                        <span class="${tagClass}">${item.type} (รอบ ${item.round})</span>
-                    `;
-                    historyList.appendChild(li);
-                });
-            }
+/* ── INIT ────────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  // ลอง restore session เดิม
+  const saved = sessionStorage.getItem('sc_phone');
+  if (saved) {
+    currentPhone = saved;
+    loadStudentData(saved);
+  }
+});
 
-            // แสดงตารางผลลัพธ์
-            resultContainer.style.display = 'block';
-        }
+/* ── GAS CALL ────────────────────────────────────── */
+function gasCall(params) {
+  const qs = new URLSearchParams(params).toString();
+  return fetch(`${GAS_URL}?${qs}`).then(r => r.json());
+}
 
-        // ฟังก์ชันช่วยจัดรูปแบบวันที่จาก YYYY-MM-DD ให้เป็นวันที่ไทยแบบสั้นอ่านง่าย
-        function formatThaiDate(dateStr) {
-            if(!dateStr) return '-';
-            const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-            const parts = dateStr.split('-');
-            if(parts.length !== 3) return dateStr;
-            
-            const day = parseInt(parts[2], 10);
-            const month = months[parseInt(parts[1], 10) - 1];
-            const year = parseInt(parts[0], 10) + 543; // แปลงเป็น พ.ศ.
-            
-            return `${day} ${month} ${year}`;
-        }
-    </script>
+/* ── LOGIN ───────────────────────────────────────── */
+async function doLogin() {
+  const raw = document.getElementById('login-phone').value.trim();
+  if (!raw) { showErr('กรุณากรอกเบอร์โทรศัพท์ก่อน'); return; }
+
+  const btn = document.getElementById('btn-login');
+  const errEl = document.getElementById('login-err');
+  errEl.classList.remove('show');
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังตรวจสอบ…';
+
+  try {
+    const data = await gasCall({ action: 'studentCheck', phone: raw });
+
+    if (!data.success) {
+      showErr(data.message || 'ไม่พบข้อมูลนักเรียนที่ตรงกับเบอร์นี้');
+      return;
+    }
+
+    // บันทึก session
+    currentPhone = raw;
+    sessionStorage.setItem('sc_phone', raw);
+
+    renderMain(data, raw);
+  } catch(e) {
+    showErr('เกิดข้อผิดพลาด: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'ตรวจสอบข้อมูล';
+  }
+}
+
+function showErr(msg) {
+  const el = document.getElementById('login-err');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+/* ── LOAD DATA (restore session) ──────────────────── */
+async function loadStudentData(phone) {
+  try {
+    const data = await gasCall({ action: 'studentCheck', phone });
+    if (!data.success) { doLogout(); return; }
+    renderMain(data, phone);
+  } catch(e) {
+    doLogout();
+  }
+}
+
+/* ── RENDER MAIN ─────────────────────────────────── */
+function renderMain(data, rawPhone) {
+  const p = data.profile;
+  const history = data.history || [];
+
+  // ─ Profile
+  const initials = p.nickname ? p.nickname.charAt(0).toUpperCase() : '?';
+  document.getElementById('p-avatar').textContent   = initials;
+  document.getElementById('p-nickname').textContent = p.nickname || '—';
+  document.getElementById('p-fullname').textContent = p.fullname || '—';
+  document.getElementById('p-school').textContent   = p.school   || '—';
+  document.getElementById('p-dept').textContent     = p.dept     || '—';
+  document.getElementById('p-round').textContent    = p.round    || '—';
+
+  // phone — เติม 0 ข้างหน้าถ้าหาย + format xxx-xxx-xxxx
+  const phoneDisplay = fmtPhone(rawPhone);
+  document.getElementById('p-phone').textContent = phoneDisplay;
+
+  // ─ Course
+  const isMao = /เหมา|mix/i.test(p.courseRaw);
+  document.getElementById('p-course').textContent = p.courseRaw || '—';
+
+  // คำนวณ progress bar
+  const remNum = parseInt(p.remaining);
+  const alertBox = document.getElementById('course-alerts');
+  alertBox.innerHTML = '';
+
+  if (isMao) {
+    document.getElementById('p-remaining').textContent = 'ไม่จำกัด';
+    document.getElementById('progress-fill').style.width = '100%';
+    document.getElementById('progress-fill').className = 'progress-bar-fill';
+  } else if (!isNaN(remNum)) {
+    // ประมาณครั้งทั้งหมดจากชื่อคอร์ส (fallback = 20)
+    const totalMatch = p.courseRaw ? p.courseRaw.match(/\[(\d+)\s*ครั้ง/) : null;
+    const total = totalMatch ? parseInt(totalMatch[1]) : 20;
+    const pct = Math.min(100, Math.round((remNum / total) * 100));
+    document.getElementById('p-remaining').textContent = `${remNum} ครั้ง`;
+    const fill = document.getElementById('progress-fill');
+    fill.style.width = pct + '%';
+    fill.className = 'progress-bar-fill' + (pct <= 20 ? ' danger' : pct <= 40 ? ' warn' : '');
+
+    if (remNum === 0) {
+      alertBox.innerHTML += `<div class="alert-inline ai-d">⚠️ ครั้งเรียนของคุณหมดแล้ว กรุณาติดต่อแอดมินเพื่อต่อคอร์ส</div>`;
+    } else if (remNum <= 2) {
+      alertBox.innerHTML += `<div class="alert-inline ai-w">⏳ เหลืออีก ${remNum} ครั้ง — ใกล้หมดแล้ว</div>`;
+    }
+  } else {
+    document.getElementById('p-remaining').textContent = p.remaining || '—';
+    document.getElementById('progress-fill').style.width = '50%';
+  }
+
+  // Expiry
+  const expiryStr = p.expiry ? fmtDateTH(p.expiry) : '—';
+  document.getElementById('p-expiry').textContent = expiryStr;
+  if (p.expiry) {
+    const exp = new Date(p.expiry);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const warn7 = new Date(today); warn7.setDate(warn7.getDate() + 7);
+    if (exp <= today) {
+      alertBox.innerHTML += `<div class="alert-inline ai-d">🗓️ อายุคอร์สหมดแล้ว กรุณาติดต่อแอดมิน</div>`;
+    } else if (exp <= warn7) {
+      alertBox.innerHTML += `<div class="alert-inline ai-w">🗓️ อายุคอร์สใกล้หมด (${expiryStr})</div>`;
+    }
+  }
+
+  // ─ History
+  renderHistory(history, p);
+
+  // ─ Show main, hide login
+  document.getElementById('screen-login').style.display = 'none';
+  document.getElementById('screen-main').style.display  = 'block';
+  document.getElementById('btn-logout').classList.add('show');
+}
+
+/* ── RENDER HISTORY ──────────────────────────────── */
+function renderHistory(history, profile) {
+  const box = document.getElementById('history-content');
+  const countEl = document.getElementById('history-count');
+
+  if (!history || !history.length) {
+    countEl.textContent = '0 ครั้ง';
+    box.innerHTML = `<div class="state"><div class="state-ico">📭</div><p>ยังไม่มีประวัติการเข้าเรียน</p></div>`;
+    return;
+  }
+
+  // จำนวนครั้งที่ใช้ไปทั้งหมด (unique date+type)
+  countEl.textContent = history.length + ' ครั้ง';
+
+  // จัดกลุ่มตามรอบคอร์ส
+  const roundsMap = {};
+  history.forEach(h => {
+    const rName = h.round || 'ไม่ระบุรอบคอร์ส';
+    if (!roundsMap[rName]) roundsMap[rName] = [];
+    roundsMap[rName].push(h);
+  });
+
+  let html = '';
+
+  Object.keys(roundsMap).forEach(rName => {
+    // เรียงจากเก่าไปใหม่เพื่อนับครั้งที่ 1, 2, 3...
+    const sortedLogs = roundsMap[rName].slice().sort(
+      (a, b) => new Date(a.date) - new Date(b.date)
+    );
+
+    // คำนวณ "ครั้งที่เข้าเรียน" อ้างอิงจากคอร์สที่ลงทะเบียน
+    // Backend ส่ง history ที่ sort จากใหม่ไปเก่า แต่เราเรียงใหม่แล้วข้างบน
+    const isMaoRound = /เหมา|mix/i.test(profile.courseRaw);
+    const totalMatch  = profile.courseRaw ? profile.courseRaw.match(/\[(\d+)\s*ครั้ง/) : null;
+    const totalCourse = totalMatch ? parseInt(totalMatch[1]) : null;
+    const remNum      = parseInt(profile.remaining);
+    const usedCount   = sortedLogs.length;
+
+    // หา "ครั้งที่เริ่มนับ" = total - remaining (ถ้ามีข้อมูลพอ)
+    // ถ้าไม่ได้ระบุ total ให้นับจาก 1 ตามลำดับใน log
+    let startNumber = 1;
+    if (!isMaoRound && totalCourse && !isNaN(remNum)) {
+      // ครั้งที่ใช้ไปทั้งหมด = total - remaining
+      const usedTotal = totalCourse - remNum;
+      // ครั้งเริ่มต้นของ round นี้ = usedTotal - usedCount + 1
+      startNumber = Math.max(1, usedTotal - usedCount + 1);
+    }
+
+    const tbody = sortedLogs.map((r, idx) => {
+      const sessionNum = isMaoRound ? (idx + 1) : (startNumber + idx);
+      return `<tr>
+        <td><span class="num-cell">ครั้งที่ ${sessionNum}</span></td>
+        <td>${fmtDateTH(r.date)}</td>
+        <td><span class="pill ${pillClass(r.type)}">${esc(r.type || '—')}</span></td>
+      </tr>`;
+    }).join('');
+
+    html += `
+    <div class="round-block">
+      <div class="round-head">
+        <span class="round-name">🔄 รอบคอร์สเรียน: ${esc(rName)}</span>
+        <span class="round-badge">เข้าเรียนสะสม ${sortedLogs.length} ครั้ง</span>
+      </div>
+      <table class="rtable">
+        <thead>
+          <tr>
+            <th style="width:130px">ครั้งที่เข้าเรียน</th>
+            <th>วันที่เข้าเรียน</th>
+            <th>รูปแบบการเรียน</th>
+          </tr>
+        </thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    </div>`;
+  });
+
+  box.innerHTML = html;
+}
+
+/* ── LOGOUT ──────────────────────────────────────── */
+function doLogout() {
+  sessionStorage.removeItem('sc_phone');
+  currentPhone = '';
+  document.getElementById('login-phone').value = '';
+  document.getElementById('login-err').classList.remove('show');
+  document.getElementById('screen-main').style.display  = 'none';
+  document.getElementById('screen-login').style.display = 'flex';
+  document.getElementById('btn-logout').classList.remove('show');
+}
+
+/* ── HELPERS ─────────────────────────────────────── */
+function pillClass(t) {
+  if (!t) return '';
+  if (t.includes('ติวสด')) return 'pill-live';
+  return 'pill-online';
+}
+
+function fmtPhone(raw) {
+  // ทำความสะอาดเลข แล้วเติม 0 ข้างหน้าถ้าหาย
+  let digits = String(raw).replace(/[^0-9]/g, '');
+  if (digits.length === 9) digits = '0' + digits; // กรณีตัด leading 0 ออก
+  // format: 0XX-XXX-XXXX
+  if (digits.length === 10) {
+    return digits.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+  }
+  return digits;
+}
+
+function fmtDateTH(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('th-TH', { day:'numeric', month:'long', year:'numeric' });
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+let toastTimer;
+function showToast(msg, cls='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + cls;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 2800);
+}
+</script>
+
 </body>
 </html>
