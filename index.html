@@ -349,16 +349,6 @@ a{text-decoration:none}
   <!-- Status Banner (แสดงเฉพาะกรณี Inactive / Expired) -->
   <div id="status-banner" style="display:none"></div>
 
-  <!-- CTA Buttons (แสดงเฉพาะกรณีที่ต้องต่อคอร์ส) -->
-  <div id="cta-group" class="cta-group" style="display:none">
-    <a href="https://lin.ee/UPPwbeT" target="_blank" class="cta-btn cta-primary">
-      💬 ต่อคอร์ส / ติดต่อแอดมิน
-    </a>
-    <a href="https://artnolate.github.io/art-link/" target="_blank" class="cta-btn cta-secondary">
-      🎨 สนใจคอร์สอื่นๆ
-    </a>
-  </div>
-
   <!-- Profile Card -->
   <div class="profile-card">
     <div class="profile-top">
@@ -425,6 +415,16 @@ a{text-decoration:none}
         </tr>
       </tfoot>
     </table>
+  </div>
+
+  <!-- CTA Buttons — อยู่ใต้กล่องสรุปยอด แสดงเมื่อ Inactive / หมดอายุ / เรียนเกิน -->
+  <div id="cta-group" class="cta-group" style="display:none">
+    <a href="https://lin.ee/UPPwbeT" target="_blank" class="cta-btn cta-primary">
+      💬 ต่อคอร์ส / ติดต่อแอดมิน
+    </a>
+    <a href="https://artnolate.github.io/art-link/" target="_blank" class="cta-btn cta-secondary">
+      🎨 สนใจคอร์สอื่นๆ
+    </a>
   </div>
 
   <!-- Attendance History -->
@@ -545,17 +545,18 @@ function renderMain(data, rawPhone) {
   } else if (!isNaN(remNum)) {
     const totalMatch  = p.courseRaw ? p.courseRaw.match(/\[(\d+)\s*ครั้ง/) : null;
     const total       = totalMatch ? parseInt(totalMatch[1]) : 20;
-    const pct         = Math.min(100, Math.round((remNum / total) * 100));
-    document.getElementById('p-remaining').textContent = `${remNum} ครั้ง`;
+    const pct         = remNum <= 0 ? 0 : Math.min(100, Math.round((remNum / total) * 100));
+    document.getElementById('p-remaining').textContent = remNum <= 0 ? '0 ครั้ง' : `${remNum} ครั้ง`;
     const fillClass = pct <= 10 ? 'danger' : pct <= 30 ? 'warn' : '';
     setProgressBar(pct, fillClass);
 
-    // Alert: เหลือ 0-2 ครั้ง
+    // Alert เฉพาะ 0-2 ครั้ง (ไม่แสดงถ้าติดลบ — กรณีนั้นอายุคอร์สหมดแล้ว จัดการที่ banner แทน)
     if (remNum === 0) {
       alertBox.innerHTML += `<div class="alert-inline ai-d">⚠️ ครั้งเรียนของคุณหมดแล้ว กรุณาต่อคอร์ส</div>`;
-    } else if (remNum <= 2) {
+    } else if (remNum > 0 && remNum <= 2) {
       alertBox.innerHTML += `<div class="alert-inline ai-w">⏳ เหลืออีกเพียง ${remNum} ครั้ง — ใกล้หมดแล้ว</div>`;
     }
+    // กรณีติดลบ: ไม่แสดง alert ในกล่องนี้ (banner ด้านบนจัดการแล้ว)
   } else {
     document.getElementById('p-remaining').textContent = p.remaining || '—';
     setProgressBar(50, '');
@@ -572,12 +573,13 @@ function renderMain(data, rawPhone) {
   if (p.expiry) {
     const exp = new Date(p.expiry); exp.setHours(0,0,0,0);
     if (exp < today) {
-      // หมดอายุแล้ว
+      // หมดอายุแล้ว — set flag เพื่อแสดง banner แต่ไม่ขึ้น alert ในกล่องคอร์ส
       isExpired = true;
-      alertBox.innerHTML += `<div class="alert-inline ai-d">🗓️ หมดอายุการใช้งาน (${expiryStr})</div>`;
     } else if (exp <= warn7) {
-      // ใกล้หมด ≤7 วัน หรือ ตรงกับวันนี้
-      alertBox.innerHTML += `<div class="alert-inline ai-w">🗓️ อายุคอร์สใกล้หมด — หมดวันที่ ${expiryStr}</div>`;
+      // ใกล้หมด ≤7 วัน หรือตรงกับวันนี้ — แสดงใน course box
+      const daysLeft = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+      const dayTxt   = daysLeft === 0 ? 'วันนี้เป็นวันสุดท้าย!' : `อีก ${daysLeft} วัน`;
+      alertBox.innerHTML += `<div class="alert-inline ai-w">🗓️ อายุคอร์สใกล้หมด — ${dayTxt} (${expiryStr})</div>`;
     }
   }
 
