@@ -198,6 +198,7 @@ a{text-decoration:none}
 .progress-stat{font-size:13px;font-weight:700;min-width:84px;text-align:right;white-space:nowrap}
 .course-meta-row{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13px;color:var(--txt2);margin-top:6px}
 .course-meta-row span{display:flex;align-items:center;gap:4px}
+.inactive-reason{font-weight:600;color:var(--txt2)}
 
 /* ── Compact urgent tag (ต่อท้าย "📆 อายุคอร์ส:") ───
    แทนที่กล่องแจ้งเตือนแบบเดิม เพื่อประหยัดพื้นที่แนวตั้ง
@@ -290,6 +291,7 @@ a{text-decoration:none}
 .round-block.is-inactive .round-head{background:#F0F1F3}
 .round-block.is-inactive .round-name{color:var(--txt2)}
 .bar-empty{background:var(--grey-l)!important}
+.round-block.is-inactive .progress-bar-fill{background:#9CA3AF!important}
 
 /* ── States ─────────────────────────────── */
 .state{
@@ -580,14 +582,14 @@ function renderRoundUnit(rd) {
   const totalMatch    = rd.courseRaw ? rd.courseRaw.match(/\[(\d+)\s*ครั้ง/) : null;
   const totalCourse   = totalMatch ? parseInt(totalMatch[1]) : null;
   const remainingBlank = String(rd.remaining || '').trim() === '';
-  const statusActiveForBar = String(rd.status || '').toLowerCase() === 'active';
+  const statusActive   = String(rd.status || '').toLowerCase() === 'active';
 
   if (isMao) {
     remDisplay = 'ไม่จำกัด';
     pct = 100;
     barEmpty = true;
   } else if (remainingBlank) {
-    if (statusActiveForBar) {
+    if (statusActive) {
       remDisplay = 'ไม่จำกัด';
       pct = 100;
       barEmpty = true;
@@ -606,9 +608,26 @@ function renderRoundUnit(rd) {
     pct = 0;
   }
 
+  // ─ ข้อความเสริมสำหรับรอบ Inactive: ต่อท้าย "📆 อายุคอร์ส:" ด้วยเหตุผลที่ทำให้ปิดรอบ
+  //   เช่น หมดอายุแล้ว หรือ ใช้ครบจำนวนครั้งแล้ว (แสดงทุกรอบที่ inactive ไม่จำกัดแค่รอบปัจจุบัน)
+  let inactiveReasonHtml = '';
+  if (!statusActive) {
+    const reasons = [];
+    if (rd.expiry) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const exp   = new Date(rd.expiry); exp.setHours(0,0,0,0);
+      if (exp < today) reasons.push('หมดอายุแล้ว');
+    }
+    if (!isMao && !remainingBlank && !isNaN(remNum) && remNum <= 0 && totalCourse) {
+      reasons.push(`ใช้ครบ ${totalCourse} ครั้งแล้ว`);
+    }
+    if (reasons.length) {
+      inactiveReasonHtml = `<span class="inactive-reason">${reasons.join(' · ')}</span>`;
+    }
+  }
+
   // ─ ข้อความแจ้งเตือนแบบกระชับ: แสดงเฉพาะรอบเรียนปัจจุบันที่ยัง Active เท่านั้น
   //   (รอบ Inactive จะไม่ขึ้นแจ้งเตือนใดๆ เลย เพื่อไม่ให้รบกวนสายตา)
-  const statusActive = String(rd.status || '').toLowerCase() === 'active';
   let remainTagHtml  = '';
   let expiryTagHtml  = '';
   if (rd.isCurrent && statusActive) {
@@ -660,7 +679,7 @@ function renderRoundUnit(rd) {
           <div class="progress-bar-bg"><div class="progress-bar-fill ${fillClass}${barEmpty ? ' bar-empty' : ''}" style="width:${pct}%"></div></div>
           <span class="progress-stat">${esc(remDisplay)}</span>
         </div>
-        <div class="course-meta-row"><span>📆 อายุคอร์ส: <strong>${esc(expiryStr)}</strong>${expiryTagHtml ? ' · ' + expiryTagHtml : ''}${remainTagHtml ? ' · ' + remainTagHtml : ''}</span></div>
+        <div class="course-meta-row"><span>📆 อายุคอร์ส: <strong>${esc(expiryStr)}</strong>${inactiveReasonHtml ? ' · ' + inactiveReasonHtml : ''}${expiryTagHtml ? ' · ' + expiryTagHtml : ''}${remainTagHtml ? ' · ' + remainTagHtml : ''}</span></div>
       </div>
       ${historyHtml}
     </div>
