@@ -572,22 +572,38 @@ function renderRoundUnit(rd) {
   // ─ Progress bar: remNum / totalCourse (ดึง totalCourse จาก courseRaw เช่น "[20 ครั้ง]")
   // ─ ข้อความแสดงผล: "X / Y ครั้ง" (จำนวนที่เหลือ / จำนวนคอร์สทั้งหมด)
   // ─ คอร์สเหมา/Buffet/Mix → หลอดว่างเปล่าสีเทา (ไม่เติมสี) ไม่นับเป็น progress ปกติ
+  // ─ คอลัม L (remaining) ว่างเปล่า:
+  //     รอบ Active   → หลอดเต็ม 100% (ไม่จำกัด)
+  //     รอบ Inactive → หลอด 0%
+  // ─ คอลัม L = 0 → หลอด 0% เสมอ (ไม่ว่า Active/Inactive)
   let remDisplay, pct, fillClass = '', barEmpty = false;
-  const totalMatch  = rd.courseRaw ? rd.courseRaw.match(/\[(\d+)\s*ครั้ง/) : null;
-  const totalCourse = totalMatch ? parseInt(totalMatch[1]) : null;
+  const totalMatch    = rd.courseRaw ? rd.courseRaw.match(/\[(\d+)\s*ครั้ง/) : null;
+  const totalCourse   = totalMatch ? parseInt(totalMatch[1]) : null;
+  const remainingBlank = String(rd.remaining || '').trim() === '';
+  const statusActiveForBar = String(rd.status || '').toLowerCase() === 'active';
 
   if (isMao) {
     remDisplay = 'ไม่จำกัด';
     pct = 100;
     barEmpty = true;
+  } else if (remainingBlank) {
+    if (statusActiveForBar) {
+      remDisplay = 'ไม่จำกัด';
+      pct = 100;
+      barEmpty = true;
+    } else {
+      remDisplay = '—';
+      pct = 0;
+      barEmpty = true;
+    }
   } else if (!isNaN(remNum)) {
     const totalForPct = totalCourse || 20;
-    pct        = Math.min(100, Math.round((remNum / totalForPct) * 100));
+    pct        = remNum <= 0 ? 0 : Math.min(100, Math.round((remNum / totalForPct) * 100));
     fillClass  = pct <= 10 ? 'danger' : pct <= 30 ? 'warn' : '';
     remDisplay = totalCourse ? `${remNum} / ${totalCourse} ครั้ง` : `${remNum} ครั้ง`;
   } else {
     remDisplay = rd.remaining || '—';
-    pct = 50;
+    pct = 0;
   }
 
   // ─ ข้อความแจ้งเตือนแบบกระชับ: แสดงเฉพาะรอบเรียนปัจจุบันที่ยัง Active เท่านั้น
@@ -606,7 +622,9 @@ function renderRoundUnit(rd) {
       const warn7 = new Date(today); warn7.setDate(warn7.getDate() + 7);
       const exp   = new Date(rd.expiry); exp.setHours(0,0,0,0);
       if (exp >= today && exp <= warn7) {
-        expiryTagHtml = `<span class="urgent-tag"><span class="urgent-ico">🚨</span>ใกล้หมดอายุ</span>`;
+        const daysLeft = Math.round((exp - today) / 86400000);
+        const expiryMsg = daysLeft === 0 ? 'หมดอายุวันนี้' : `ใกล้หมดอายุ อีก ${daysLeft} วัน`;
+        expiryTagHtml = `<span class="urgent-tag"><span class="urgent-ico">🚨</span>${expiryMsg}</span>`;
       }
     }
   }
