@@ -195,18 +195,26 @@ a{text-decoration:none}
 }
 .progress-bar-fill.warn{background:var(--orange)}
 .progress-bar-fill.danger{background:var(--red)}
-.progress-stat{font-size:13px;font-weight:700;min-width:56px;text-align:right}
+.progress-stat{font-size:13px;font-weight:700;min-width:84px;text-align:right;white-space:nowrap}
 .course-meta-row{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13px;color:var(--txt2);margin-top:6px}
 .course-meta-row span{display:flex;align-items:center;gap:4px}
-.alert-inline{
-  display:flex;align-items:center;gap:7px;padding:10px 14px;
-  border-radius:var(--rs);font-size:13px;font-weight:500;margin-top:10px;
-  border:1px solid transparent;
-}
-.ai-w{background:var(--orange-l);color:#92400E;border-color:#FDE68A}
-.ai-d{background:var(--red-l);color:#991B1B;border-color:#FECACA}
 
-/* ── Over-limit Bill Box ──────────────── */
+/* ── Compact urgent tag (ต่อท้าย "📆 อายุคอร์ส:") ───
+   แทนที่กล่องแจ้งเตือนแบบเดิม เพื่อประหยัดพื้นที่แนวตั้ง
+──────────────────────────────────────── */
+.urgent-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  font-weight:700;color:var(--red);
+}
+.urgent-ico{
+  display:inline-block;animation:alarmPulse 1.1s ease-in-out infinite;
+}
+@keyframes alarmPulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.45;transform:scale(.88)}
+}
+
+/* ── Over-limit Bill Box ────────────────── */
 .bill-box{
   background:#FFF3E0;border:1.5px solid #FB8C00;
   border-radius:var(--r);padding:16px 18px;margin-bottom:20px;
@@ -267,6 +275,21 @@ a{text-decoration:none}
 .pill{display:inline-block;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600}
 .pill-live{background:#E8EFFF;color:var(--primary)}
 .pill-online{background:#FFE5CC;color:#B8740F}
+
+/* ── Inactive Round Dimming ──────────────
+   ทำให้รอบเรียนที่ Inactive ดูจางลง/เป็นโทนเทา เพื่อให้รอบ Active เด่นขึ้น
+   หมายเหตุ: opacity ของ parent จะกระทบ descendant เสมอแม้ลูกจะตั้ง opacity:1 ทับ
+   จึงต้องห่อเฉพาะส่วนที่ต้องการหรี่ไว้ใน .dimmable แล้วปล่อย .bill-box ไว้นอก wrapper
+   เพื่อให้กล่องสรุปยอดเรียนเกินอายุคอร์สคงสีปกติเสมอ ไม่ว่ารอบจะ Active หรือไม่
+──────────────────────────────────────── */
+.round-block.is-inactive{box-shadow:none}
+.round-block.is-inactive .dimmable{
+  opacity:.6;
+  filter:grayscale(.45);
+}
+.round-block.is-inactive .round-head{background:#F0F1F3}
+.round-block.is-inactive .round-name{color:var(--txt2)}
+.bar-empty{background:var(--grey-l)!important}
 
 /* ── States ─────────────────────────────── */
 .state{
@@ -346,15 +369,25 @@ a{text-decoration:none}
 <!-- ── SCREEN : MAIN ── -->
 <div id="screen-main">
 
-  <!-- Status Banner (แสดงเฉพาะกรณี Inactive / Expired) -->
+  <!-- Status Banner (แสดงเฉพาะกรณี Inactive / Expired ของรอบปัจจุบัน) -->
   <div id="status-banner" style="display:none"></div>
 
-  <!-- Profile Card -->
+  <!-- CTA Buttons (แสดงเฉพาะกรณีที่ต้องต่อคอร์ส) -->
+  <div id="cta-group" class="cta-group" style="display:none">
+    <a href="https://lin.ee/UPPwbeT" target="_blank" class="cta-btn cta-primary">
+      💬 ต่อคอร์ส / ติดต่อแอดมิน
+    </a>
+    <a href="https://artnolate.github.io/art-link/" target="_blank" class="cta-btn cta-secondary">
+      🎨 สนใจคอร์สอื่นๆ
+    </a>
+  </div>
+
+  <!-- Profile Card (ข้อมูลพื้นฐาน — ไม่แสดงรอบที่เรียน) -->
   <div class="profile-card">
     <div class="profile-top">
       <div class="profile-avatar" id="p-avatar">?</div>
       <div class="profile-names">
-        <div class="p-nickname"><span id="p-nickname">—</span><span class="status-tag" id="p-status-tag"></span></div>
+        <div class="p-nickname"><span id="p-nickname-text">—</span><span class="status-tag" id="p-status-tag"></span></div>
         <div class="p-fullname" id="p-fullname">—</div>
       </div>
     </div>
@@ -371,69 +404,16 @@ a{text-decoration:none}
         <span class="pitem-label">🎓 ภาควิชา</span>
         <span class="pitem-value" id="p-dept">—</span>
       </div>
-      <div class="pitem">
-        <span class="pitem-label">🔄 รอบที่เรียน</span>
-        <span class="pitem-value" id="p-round">—</span>
-      </div>
     </div>
   </div>
 
-  <!-- Course Status Box -->
-  <div class="course-box">
-    <div class="course-box-title">📚 ข้อมูลคอร์สที่ลงทะเบียน</div>
-    <div class="course-name" id="p-course">—</div>
-    <div class="progress-row">
-      <span class="progress-label">ครั้งที่เหลือ</span>
-      <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
-      </div>
-      <span class="progress-stat" id="p-remaining">—</span>
-    </div>
-    <div class="course-meta-row">
-      <span>📆 อายุคอร์ส: <strong id="p-expiry">—</strong></span>
-    </div>
-    <div id="course-alerts"></div>
-  </div>
-
-  <!-- Over-limit Bill Box (แสดงเฉพาะกรณีเรียนเกิน) -->
-  <div id="bill-box" class="bill-box" style="display:none">
-    <div class="bill-title">💳 สรุปยอดเรียนเกินอายุคอร์ส</div>
-    <table class="bill-table">
-      <thead>
-        <tr>
-          <th>รูปแบบการเรียน</th>
-          <th>จำนวนครั้งเกิน</th>
-          <th>ราคาต่อครั้ง</th>
-          <th>รวม</th>
-        </tr>
-      </thead>
-      <tbody id="bill-tbody"></tbody>
-      <tfoot>
-        <tr class="bill-total-row">
-          <td colspan="3">💰 ยอดรวมที่ต้องชำระ</td>
-          <td id="bill-total">0 บาท</td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-
-  <!-- CTA Buttons — อยู่ใต้กล่องสรุปยอด แสดงเมื่อ Inactive / หมดอายุ / เรียนเกิน -->
-  <div id="cta-group" class="cta-group" style="display:none">
-    <a href="https://lin.ee/UPPwbeT" target="_blank" class="cta-btn cta-primary">
-      💬 ต่อคอร์ส / ติดต่อแอดมิน
-    </a>
-    <a href="https://artnolate.github.io/art-link/" target="_blank" class="cta-btn cta-secondary">
-      🎨 สนใจคอร์สอื่นๆ
-    </a>
-  </div>
-
-  <!-- Attendance History -->
+  <!-- Course + History Section (แยกเป็นกล่องตามรอบเรียน — รอบปัจจุบันอยู่บนสุด) -->
   <div class="sec-title">
-    📜 ประวัติการเข้าเรียน
-    <span class="sec-count" id="history-count">0 ครั้ง</span>
+    📚 คอร์สเรียนและประวัติการเข้าเรียน
+    <span class="sec-count" id="rounds-count">0 รอบ</span>
   </div>
-  <div id="history-content">
-    <div class="state"><div class="spinner"></div><p>กำลังโหลดประวัติ…</p></div>
+  <div id="rounds-container">
+    <div class="state"><div class="spinner"></div><p>กำลังโหลดข้อมูล…</p></div>
   </div>
 
 </div>
@@ -442,7 +422,7 @@ a{text-decoration:none}
 
 <script>
 /* ── CONFIG ──────────────────────────────────────── */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbw6_JEBX8IJ9YU-EGXjARP6KZkCdjKa9Kfkw_O1yj_T8Su9xpVaUZrUL3wsj2HlUWK9/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyAZ9KqQRgH8NqBRNTvGHN2lkDDmb0neHQnH2IOMbRwvlKNqLuNVyqWvxqaE3RW9XOH/exec';
 const PRICE_LIVE   = 750;  // บาท/ครั้ง สำหรับติวสด
 const PRICE_ONLINE = 380;  // บาท/ครั้ง สำหรับออนไลน์
 
@@ -476,7 +456,7 @@ async function doLogin() {
   btn.textContent = '⏳ กำลังตรวจสอบ…';
 
   try {
-    // เรียก studentCheckAll — ค้นหาทั้ง Active และ Inactive
+    // เรียก studentCheckAll — ค้นหาทุกรอบเรียน ทั้ง Active และ Inactive
     const data = await gasCall({ action: 'studentCheckAll', phone: raw });
 
     if (!data.success) {
@@ -512,93 +492,48 @@ async function loadStudentData(phone) {
 
 /* ── RENDER MAIN ─────────────────────────────────── */
 function renderMain(data, rawPhone) {
-  const p       = data.profile;
-  const history = data.history || [];
-  const isActive = String(p.status || '').toLowerCase() === 'active';
+  const rounds = data.rounds || [];
+  if (!rounds.length) return;
 
-  // ─ Profile
-  document.getElementById('p-avatar').textContent   = p.nickname ? p.nickname.charAt(0).toUpperCase() : '?';
-  document.getElementById('p-nickname').textContent = p.nickname || '—';
-  document.getElementById('p-fullname').textContent = p.fullname || '—';
-  document.getElementById('p-school').textContent   = p.school   || '—';
-  document.getElementById('p-dept').textContent     = p.dept     || '—';
-  document.getElementById('p-round').textContent    = p.round    || '—';
+  const current  = rounds[0]; // รอบเรียนปัจจุบัน (เลขรอบสูงสุด อยู่บนสุดหลังเรียงแล้ว)
+  const isActive = String(current.status || '').toLowerCase() === 'active';
+
+  // ─ Profile (ไม่แสดงรอบที่เรียนแล้ว)
+  document.getElementById('p-avatar').textContent   = current.nickname ? current.nickname.charAt(0).toUpperCase() : '?';
+  document.getElementById('p-nickname-text').textContent = current.nickname || '—';
+  document.getElementById('p-fullname').textContent = current.fullname || '—';
+  document.getElementById('p-school').textContent   = current.school   || '—';
+  document.getElementById('p-dept').textContent     = current.dept     || '—';
   document.getElementById('p-phone').textContent    = fmtPhone(rawPhone);
 
-  // Status tag
+  // Status tag (อ้างอิงจากรอบปัจจุบัน)
   const stag = document.getElementById('p-status-tag');
   stag.textContent  = isActive ? 'Active' : 'Inactive';
   stag.className    = 'status-tag ' + (isActive ? 'active' : 'inactive');
 
-  // ─ Course info
-  const isMao  = /เหมา|mix/i.test(p.courseRaw || '');
-  document.getElementById('p-course').textContent = p.courseRaw || '—';
-
-  const remNum     = parseInt(p.remaining);
-  const alertBox   = document.getElementById('course-alerts');
-  alertBox.innerHTML = '';
-
-  // Progress bar
-  if (isMao) {
-    document.getElementById('p-remaining').textContent = 'ไม่จำกัด';
-    setProgressBar(100, '');
-  } else if (!isNaN(remNum)) {
-    const totalMatch  = p.courseRaw ? p.courseRaw.match(/\[(\d+)\s*ครั้ง/) : null;
-    const total       = totalMatch ? parseInt(totalMatch[1]) : 20;
-    const pct         = remNum <= 0 ? 0 : Math.min(100, Math.round((remNum / total) * 100));
-    document.getElementById('p-remaining').textContent = remNum <= 0 ? '0 ครั้ง' : `${remNum} ครั้ง`;
-    const fillClass = pct <= 10 ? 'danger' : pct <= 30 ? 'warn' : '';
-    setProgressBar(pct, fillClass);
-
-    // Alert เฉพาะ 0-2 ครั้ง (ไม่แสดงถ้าติดลบ — กรณีนั้นอายุคอร์สหมดแล้ว จัดการที่ banner แทน)
-    if (remNum === 0) {
-      alertBox.innerHTML += `<div class="alert-inline ai-d">⚠️ ครั้งเรียนของคุณหมดแล้ว กรุณาต่อคอร์ส</div>`;
-    } else if (remNum > 0 && remNum <= 2) {
-      alertBox.innerHTML += `<div class="alert-inline ai-w">⏳ เหลืออีกเพียง ${remNum} ครั้ง — ใกล้หมดแล้ว</div>`;
-    }
-    // กรณีติดลบ: ไม่แสดง alert ในกล่องนี้ (banner ด้านบนจัดการแล้ว)
-  } else {
-    document.getElementById('p-remaining').textContent = p.remaining || '—';
-    setProgressBar(50, '');
-  }
-
-  // Expiry
-  const expiryStr = p.expiry ? fmtDateTH(p.expiry) : '—';
-  document.getElementById('p-expiry').textContent = expiryStr;
-
-  const today = new Date(); today.setHours(0,0,0,0);
-  const warn7 = new Date(today); warn7.setDate(warn7.getDate() + 7);
+  // ─ ตรวจสอบหมดอายุของรอบปัจจุบัน (สำหรับ banner / CTA ด้านบนสุด)
   let isExpired = false;
-
-  if (p.expiry) {
-    const exp = new Date(p.expiry); exp.setHours(0,0,0,0);
-    if (exp < today) {
-      // หมดอายุแล้ว — set flag เพื่อแสดง banner แต่ไม่ขึ้น alert ในกล่องคอร์ส
-      isExpired = true;
-    } else if (exp <= warn7) {
-      // ใกล้หมด ≤7 วัน หรือตรงกับวันนี้ — แสดงใน course box
-      const daysLeft = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
-      const dayTxt   = daysLeft === 0 ? 'วันนี้เป็นวันสุดท้าย!' : `อีก ${daysLeft} วัน`;
-      alertBox.innerHTML += `<div class="alert-inline ai-w">🗓️ อายุคอร์สใกล้หมด — ${dayTxt} (${expiryStr})</div>`;
-    }
+  if (current.expiry) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const exp   = new Date(current.expiry); exp.setHours(0,0,0,0);
+    if (exp < today) isExpired = true;
   }
+  const expiryStrCurrent = current.expiry ? fmtDateTH(current.expiry) : '—';
 
-  // ─ Status banner + CTA
   const bannerEl   = document.getElementById('status-banner');
   const ctaGroupEl = document.getElementById('cta-group');
 
   if (!isActive || isExpired) {
-    // แสดง banner
     if (isExpired) {
-      bannerEl.className   = 'status-banner expired';
-      bannerEl.innerHTML   = `<span class="status-banner-ico">⛔</span>
+      bannerEl.className = 'status-banner expired';
+      bannerEl.innerHTML  = `<span class="status-banner-ico">⛔</span>
         <div class="status-banner-body">
           <div class="status-banner-title">หมดอายุการใช้งาน</div>
-          <div class="status-banner-desc">คอร์สของคุณสิ้นสุดเมื่อ ${expiryStr} หากต้องการเรียนต่อ กรุณาติดต่อแอดมินเพื่อต่ออายุหรือลงคอร์สใหม่</div>
+          <div class="status-banner-desc">คอร์สของคุณสิ้นสุดเมื่อ ${expiryStrCurrent} หากต้องการเรียนต่อ กรุณาติดต่อแอดมินเพื่อต่ออายุหรือลงคอร์สใหม่</div>
         </div>`;
     } else {
-      bannerEl.className   = 'status-banner inactive';
-      bannerEl.innerHTML   = `<span class="status-banner-ico">⚠️</span>
+      bannerEl.className = 'status-banner inactive';
+      bannerEl.innerHTML  = `<span class="status-banner-ico">⚠️</span>
         <div class="status-banner-body">
           <div class="status-banner-title">สถานะ Inactive — คอร์สไม่ได้ใช้งาน</div>
           <div class="status-banner-desc">ข้อมูลนี้อ้างอิงจากประวัติเดิม หากต้องการต่อคอร์สหรือสมัครใหม่ กรุณาติดต่อแอดมิน</div>
@@ -611,11 +546,8 @@ function renderMain(data, rawPhone) {
     ctaGroupEl.style.display = 'none';
   }
 
-  // ─ ตรวจสอบ "เรียนเกินอายุคอร์ส" แล้วคำนวณยอดค้าง
-  renderOverBill(history, p);
-
-  // ─ History
-  renderHistory(history, p);
+  // ─ เรนเดอร์กล่องคอร์ส + ประวัติ แยกตามรอบเรียน (รอบปัจจุบันอยู่บนสุด)
+  renderRounds(rounds);
 
   // ─ Switch screen
   document.getElementById('screen-login').style.display = 'none';
@@ -623,34 +555,114 @@ function renderMain(data, rawPhone) {
   document.getElementById('btn-logout').classList.add('show');
 }
 
-/* ── RENDER OVER-LIMIT BILL ──────────────────────── */
-function renderOverBill(history, profile) {
-  const billBox  = document.getElementById('bill-box');
-  const billBody = document.getElementById('bill-tbody');
-  const billTot  = document.getElementById('bill-total');
+/* ── RENDER ROUNDS (แยกกล่องตามรอบเรียน) ─────────── */
+function renderRounds(rounds) {
+  document.getElementById('rounds-count').textContent = rounds.length + ' รอบ';
+  document.getElementById('rounds-container').innerHTML =
+    rounds.map(rd => renderRoundUnit(rd)).join('');
+}
 
-  if (!profile.expiry || !history || !history.length) {
-    billBox.style.display = 'none';
-    return;
+/* ── RENDER 1 กล่องรอบเรียน (ข้อมูลคอร์ส + บิลเกินอายุ + ประวัติเข้าเรียน) ── */
+function renderRoundUnit(rd) {
+  const isMao     = /เหมา|mix/i.test(rd.courseRaw || '');
+  const remNum    = parseInt(rd.remaining);
+  const expiryStr = rd.expiry ? fmtDateTH(rd.expiry) : '—';
+  const history   = rd.history || [];
+
+  // ─ Progress bar: remNum / totalCourse (ดึง totalCourse จาก courseRaw เช่น "[20 ครั้ง]")
+  // ─ ข้อความแสดงผล: "X / Y ครั้ง" (จำนวนที่เหลือ / จำนวนคอร์สทั้งหมด)
+  // ─ คอร์สเหมา/Buffet/Mix → หลอดว่างเปล่าสีเทา (ไม่เติมสี) ไม่นับเป็น progress ปกติ
+  let remDisplay, pct, fillClass = '', barEmpty = false;
+  const totalMatch  = rd.courseRaw ? rd.courseRaw.match(/\[(\d+)\s*ครั้ง/) : null;
+  const totalCourse = totalMatch ? parseInt(totalMatch[1]) : null;
+
+  if (isMao) {
+    remDisplay = 'ไม่จำกัด';
+    pct = 100;
+    barEmpty = true;
+  } else if (!isNaN(remNum)) {
+    const totalForPct = totalCourse || 20;
+    pct        = Math.min(100, Math.round((remNum / totalForPct) * 100));
+    fillClass  = pct <= 10 ? 'danger' : pct <= 30 ? 'warn' : '';
+    remDisplay = totalCourse ? `${remNum} / ${totalCourse} ครั้ง` : `${remNum} ครั้ง`;
+  } else {
+    remDisplay = rd.remaining || '—';
+    pct = 50;
   }
 
-  const expiryDate = new Date(profile.expiry); expiryDate.setHours(23,59,59,999);
+  // ─ ข้อความแจ้งเตือนแบบกระชับ: แสดงเฉพาะรอบเรียนปัจจุบันที่ยัง Active เท่านั้น
+  //   (รอบ Inactive จะไม่ขึ้นแจ้งเตือนใดๆ เลย เพื่อไม่ให้รบกวนสายตา)
+  const statusActive = String(rd.status || '').toLowerCase() === 'active';
+  let remainTagHtml  = '';
+  let expiryTagHtml  = '';
+  if (rd.isCurrent && statusActive) {
+    if (!isMao) {
+      if (!isNaN(remNum) && remNum > 0 && remNum <= 2) {
+        remainTagHtml = `<span class="urgent-tag"><span class="urgent-ico">🚨</span>เหลืออีกเพียง ${remNum} ครั้ง</span>`;
+      }
+    }
+    if (rd.expiry) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const warn7 = new Date(today); warn7.setDate(warn7.getDate() + 7);
+      const exp   = new Date(rd.expiry); exp.setHours(0,0,0,0);
+      if (exp >= today && exp <= warn7) {
+        expiryTagHtml = `<span class="urgent-tag"><span class="urgent-ico">🚨</span>ใกล้หมดอายุ</span>`;
+      }
+    }
+  }
 
-  // กรองเฉพาะ log ที่เรียนเกินอายุคอร์ส
+  // ─ วันหมดอายุของรอบนี้ (สำหรับนับจำนวนครั้งที่เกิน และไฮไลท์แถวในตารางประวัติ)
+  let expiryDate = null;
+  if (rd.expiry) { expiryDate = new Date(rd.expiry); expiryDate.setHours(23,59,59,999); }
+  const overCount = expiryDate ? history.filter(h => h.date && new Date(h.date) > expiryDate).length : 0;
+
+  const statusClass  = statusActive ? 'active' : 'inactive';
+  const statusText   = statusActive ? 'Active' : 'Inactive';
+
+  const billHtml    = renderRoundBill(history, expiryDate);
+  const historyHtml = renderRoundHistory(history, rd, expiryDate);
+
+  // ─ รอบที่ Inactive ให้เพิ่มคลาส is-inactive เพื่อหรี่โทนสีทั้งกล่อง
+  //   (ยกเว้นกล่องบิลเกินอายุที่ถูกยกเว้นไว้ใน CSS แล้ว)
+  const blockClass = 'round-block' + (statusActive ? '' : ' is-inactive');
+
+  return `
+  <div class="${blockClass}">
+    <div class="round-head">
+      <span class="round-name">🔄 รอบเรียนที่ ${esc(rd.round || '—')}<span class="status-tag ${statusClass}">${statusText}</span></span>
+      <span class="round-badge">${rd.isCurrent ? 'รอบปัจจุบัน · ' : ''}เข้าเรียนสะสม ${history.length} ครั้ง${overCount > 0 ? ' · เกิน ' + overCount + ' ครั้ง' : ''}</span>
+    </div>
+
+    <div class="dimmable">
+      <div class="course-box" style="border:none;border-radius:0;box-shadow:none;margin-bottom:0;border-bottom:1px solid var(--border)">
+        <div class="course-box-title">📚 ข้อมูลคอร์สที่ลงทะเบียน</div>
+        <div class="course-name">${esc(rd.courseRaw || '—')}</div>
+        <div class="progress-row">
+          <span class="progress-label">ครั้งที่เหลือ</span>
+          <div class="progress-bar-bg"><div class="progress-bar-fill ${fillClass}${barEmpty ? ' bar-empty' : ''}" style="width:${pct}%"></div></div>
+          <span class="progress-stat">${esc(remDisplay)}</span>
+        </div>
+        <div class="course-meta-row"><span>📆 อายุคอร์ส: <strong>${esc(expiryStr)}</strong>${expiryTagHtml ? ' · ' + expiryTagHtml : ''}${remainTagHtml ? ' · ' + remainTagHtml : ''}</span></div>
+      </div>
+      ${historyHtml}
+    </div>
+
+    ${billHtml}
+  </div>`;
+}
+
+/* ── RENDER บิลเกินอายุคอร์ส ของรอบนั้นๆ ─────────── */
+function renderRoundBill(history, expiryDate) {
+  if (!expiryDate || !history.length) return '';
+
   const overLogs = history.filter(h => {
     if (!h.date) return false;
     const d = new Date(h.date); d.setHours(0,0,0,0);
     return d > expiryDate;
   });
+  if (!overLogs.length) return '';
 
-  if (!overLogs.length) {
-    billBox.style.display = 'none';
-    return;
-  }
-
-  // นับแยกประเภท
-  let overLive   = 0;
-  let overOnline = 0;
+  let overLive = 0, overOnline = 0;
   overLogs.forEach(h => {
     if (h.type && h.type.includes('ติวสด')) overLive++;
     else overOnline++;
@@ -679,99 +691,70 @@ function renderOverBill(history, profile) {
     </tr>`;
   }
 
-  billBody.innerHTML = rows;
-  billTot.textContent = total.toLocaleString() + ' บาท';
-  billBox.style.display = 'block';
+  return `<div class="bill-box" style="margin:0 0 20px;border-radius:0 0 var(--r) var(--r)">
+    <div class="bill-title">💳 สรุปยอดเรียนเกินอายุคอร์ส</div>
+    <table class="bill-table">
+      <thead>
+        <tr>
+          <th>รูปแบบการเรียน</th>
+          <th>จำนวนครั้งเกิน</th>
+          <th>ราคาต่อครั้ง</th>
+          <th>รวม</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+      <tfoot>
+        <tr class="bill-total-row">
+          <td colspan="3">💰 ยอดรวมที่ต้องชำระ</td>
+          <td>${total.toLocaleString()} บาท</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>`;
 }
 
-/* ── RENDER HISTORY ──────────────────────────────── */
-function renderHistory(history, profile) {
-  const box     = document.getElementById('history-content');
-  const countEl = document.getElementById('history-count');
-
+/* ── RENDER ตารางประวัติเข้าเรียน ของรอบนั้นๆ ────── */
+function renderRoundHistory(history, rd, expiryDate) {
   if (!history || !history.length) {
-    countEl.textContent = '0 ครั้ง';
-    box.innerHTML = `<div class="state"><div class="state-ico">📭</div><p>ยังไม่มีประวัติการเข้าเรียน</p></div>`;
-    return;
+    return `<div class="state" style="padding:32px 20px"><div class="state-ico">📭</div><p>ยังไม่มีประวัติการเข้าเรียนในรอบนี้</p></div>`;
   }
 
-  countEl.textContent = history.length + ' ครั้ง';
+  const isMao       = /เหมา|mix/i.test(rd.courseRaw || '');
+  const totalMatch  = rd.courseRaw ? rd.courseRaw.match(/\[(\d+)\s*ครั้ง/) : null;
+  const totalCourse = totalMatch ? parseInt(totalMatch[1]) : null;
+  const remNum      = parseInt(rd.remaining);
+  const usedCount   = history.length;
 
-  // วันหมดอายุคอร์ส (สำหรับไฮไลท์แถวเกิน)
-  const expiryDate = profile.expiry ? new Date(profile.expiry) : null;
-  if (expiryDate) expiryDate.setHours(23,59,59,999);
+  // คำนวณ startNumber อ้างอิงจาก total - remaining
+  let startNumber = 1;
+  if (!isMao && totalCourse && !isNaN(remNum)) {
+    const usedTotal = totalCourse - remNum;
+    startNumber = Math.max(1, usedTotal - usedCount + 1);
+  }
 
-  // จัดกลุ่มตามรอบคอร์ส
-  const roundsMap = {};
-  history.forEach(h => {
-    const rName = h.round || 'ไม่ระบุรอบคอร์ส';
-    if (!roundsMap[rName]) roundsMap[rName] = [];
-    roundsMap[rName].push(h);
-  });
+  const rows = history.map((r, idx) => {
+    const sessionNum = isMao ? (idx + 1) : (startNumber + idx);
+    const isOver      = expiryDate && r.date && new Date(r.date) > expiryDate;
+    const numClass    = isOver ? 'num-cell over' : 'num-cell';
+    const rowClass    = isOver ? ' class="over-row"' : '';
+    const overTag     = isOver ? ' <span class="pill-over" style="font-size:11px;margin-left:4px">เกินอายุ</span>' : '';
+    return `<tr${rowClass}>
+      <td><span class="${numClass}">ครั้งที่ ${sessionNum}</span>${overTag}</td>
+      <td>${fmtDateTH(r.date)}</td>
+      <td><span class="pill ${pillClass(r.type)}">${esc(r.type || '—')}</span></td>
+    </tr>`;
+  }).join('');
 
-  let html = '';
-
-  Object.keys(roundsMap).forEach(rName => {
-    // เรียงจากเก่าไปใหม่
-    const sortedLogs = roundsMap[rName].slice().sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
-
-    const isMaoRound  = /เหมา|mix/i.test(profile.courseRaw || '');
-    const totalMatch  = profile.courseRaw ? profile.courseRaw.match(/\[(\d+)\s*ครั้ง/) : null;
-    const totalCourse = totalMatch ? parseInt(totalMatch[1]) : null;
-    const remNum      = parseInt(profile.remaining);
-    const usedCount   = sortedLogs.length;
-
-    // คำนวณ startNumber อ้างอิงจาก total - remaining
-    let startNumber = 1;
-    if (!isMaoRound && totalCourse && !isNaN(remNum)) {
-      const usedTotal = totalCourse - remNum;
-      startNumber = Math.max(1, usedTotal - usedCount + 1);
-    }
-
-    // นับจำนวนครั้งเกิน
-    const overCount = expiryDate
-      ? sortedLogs.filter(r => new Date(r.date) > expiryDate).length
-      : 0;
-
-    const tbody = sortedLogs.map((r, idx) => {
-      const sessionNum = isMaoRound ? (idx + 1) : (startNumber + idx);
-      const isOver     = expiryDate && new Date(r.date) > expiryDate;
-      const numClass   = isOver ? 'num-cell over' : 'num-cell';
-      const rowClass   = isOver ? ' class="over-row"' : '';
-      const overTag    = isOver ? ' <span class="pill-over" style="font-size:11px;margin-left:4px">เกินอายุ</span>' : '';
-      return `<tr${rowClass}>
-        <td><span class="${numClass}">ครั้งที่ ${sessionNum}</span>${overTag}</td>
-        <td>${fmtDateTH(r.date)}</td>
-        <td><span class="pill ${pillClass(r.type)}">${esc(r.type || '—')}</span></td>
-      </tr>`;
-    }).join('');
-
-    const overNote = overCount > 0
-      ? `<span style="font-size:12px;color:#BF360C;font-weight:600;margin-left:4px">(เกินอายุ ${overCount} ครั้ง)</span>`
-      : '';
-
-    html += `
-    <div class="round-block">
-      <div class="round-head">
-        <span class="round-name">🔄 รอบคอร์สเรียน: ${esc(rName)}</span>
-        <span class="round-badge">เข้าเรียนสะสม ${sortedLogs.length} ครั้ง${overCount > 0 ? ' · เกิน '+overCount+' ครั้ง' : ''}</span>
-      </div>
-      <table class="rtable">
-        <thead>
-          <tr>
-            <th style="width:160px">ครั้งที่เข้าเรียน</th>
-            <th>วันที่เข้าเรียน</th>
-            <th>รูปแบบการเรียน</th>
-          </tr>
-        </thead>
-        <tbody>${tbody}</tbody>
-      </table>
-    </div>`;
-  });
-
-  box.innerHTML = html;
+  return `<table class="rtable">
+    <thead>
+      <tr>
+        <th style="width:160px">ครั้งที่เข้าเรียน</th>
+        <th>วันที่เข้าเรียน</th>
+        <th>รูปแบบการเรียน</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>`;
 }
 
 /* ── LOGOUT ──────────────────────────────────────── */
@@ -786,12 +769,6 @@ function doLogout() {
 }
 
 /* ── HELPERS ─────────────────────────────────────── */
-function setProgressBar(pct, cls) {
-  const fill = document.getElementById('progress-fill');
-  fill.style.width = pct + '%';
-  fill.className   = 'progress-bar-fill' + (cls ? ' ' + cls : '');
-}
-
 function pillClass(t) {
   if (!t) return '';
   if (t.includes('ติวสด')) return 'pill-live';
